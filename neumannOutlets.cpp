@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
     global::directories().setOutputDir("./tmp/");
 
     IncomprFlowParam<T> parameters(
-            (T) 1e-2,  // uMax
+            (T) 1e-3,  // uMax
             (T) 300.,  // Re  0.5  1.5
             100,       // N
             2.,        // lx
