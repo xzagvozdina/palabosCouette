@@ -60,6 +60,7 @@ typedef double T;
     
 //     // createCylinder(lattice, 3*cx, cy, radius);
 // }
+
 void setupCouetteWallsWithPeriodicity( MultiBlockLattice2D<T,DESCRIPTOR>& lattice,
                   IncomprFlowParam<T> const& parameters,
                   OnLatticeBoundaryCondition2D<T,DESCRIPTOR>& boundaryCondition )
@@ -74,8 +75,7 @@ void setupCouetteWallsWithPeriodicity( MultiBlockLattice2D<T,DESCRIPTOR>& lattic
 
     boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice, topWall);
 	
-	boundaryCondition.setVelocityConditionOnBlockBoundaries (
-	lattice, bottomWall, boundary::freeslip );
+	boundaryCondition.setVelocityConditionOnBlockBoundaries (lattice, bottomWall, boundary::freeslip );
 	
     initializeAtEquilibrium(lattice, Box2D(0, nx-1, 1, ny-2), (T)1., Array<T,2>((T)0.,(T)0.) );
 
@@ -85,7 +85,39 @@ void setupCouetteWallsWithPeriodicity( MultiBlockLattice2D<T,DESCRIPTOR>& lattic
 
     lattice.initialize();
 }
-// setupCouetteWallsWithInOutlets
+
+void setupCouetteWallsWithInOutlets( MultiBlockLattice2D<T,DESCRIPTOR>& lattice,
+                  IncomprFlowParam<T> const& parameters,
+                  OnLatticeBoundaryCondition2D<T,DESCRIPTOR>& boundaryCondition )
+{
+    const plint nx = parameters.getNx();
+    const plint ny = parameters.getNy();
+	
+	Box2D bottomWall(0, nx - 1, 0, 0);
+	Box2D topWall(0, nx - 1, ny - 1, ny - 1);
+    Box2D inlet(0, 0, 0, ny - 1);
+    Box2D outlet(nx - 1, nx - 1, 0, ny - 1);
+	
+	boundaryCondition.addVelocityBoundary0N(inlet, lattice);
+
+    setBoundaryVelocity(lattice, inlet, CouetteVelocity<T>(parameters));
+
+    integrateProcessingFunctional(new CopyUnknownPopulationsFunctional2D<T,DESCRIPTOR, 0, +1>,
+                                  outlet, lattice);
+
+    boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice, topWall);
+	
+	boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice, bottomWall, boundary::freeslip);
+	
+    initializeAtEquilibrium(lattice, Box2D(0, nx-1, 1, ny-2), (T)1., Array<T,2>((T)0.,(T)0.) );
+
+    T u = parameters.getLatticeU();
+    setBoundaryVelocity(lattice, topWall, Array<T,2>(u,(T)0.) );
+    initializeAtEquilibrium(lattice, topWall, (T)1., Array<T,2>(u,(T)0.) );
+
+    lattice.initialize();
+}
+
 // void setupInletAndBulk( MultiBlockLattice2D<T,DESCRIPTOR>& lattice,
 //                         IncomprFlowParam<T> const& parameters,
 //                         OnLatticeBoundaryCondition2D<T,DESCRIPTOR>& boundaryCondition )
@@ -153,7 +185,7 @@ int main(int argc, char* argv[]) {
 
     IncomprFlowParam<T> parameters(
             (T) 1e-2,  // uMax
-            (T) 100,  // Re 0.5 1.5     100
+            (T) 1.5,  // Re 0.5 1.5     100
             100,       // N             128  
             2.,        // lx
             1.         // ly 
@@ -173,8 +205,8 @@ int main(int argc, char* argv[]) {
         //boundaryCondition = createInterpBoundaryCondition2D<T,DESCRIPTOR>();
         boundaryCondition = createLocalBoundaryCondition2D<T,DESCRIPTOR>();
 
-    setupCouetteWallsWithPeriodicity(lattice, parameters, *boundaryCondition);
-
+    // setupCouetteWallsWithPeriodicity(lattice, parameters, *boundaryCondition);
+    setupCouetteWallsWithInOutlets(lattice, parameters, *boundaryCondition);
     // lattice.periodicity().toggle(0, false);
     // defineCylinderGeometry(lattice, parameters);
     // setupInletAndBulk(lattice, parameters, *boundaryCondition);
