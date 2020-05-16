@@ -53,7 +53,7 @@ void setupCouetteWallsWithPeriodicity( MultiBlockLattice2D<T,DESCRIPTOR>& lattic
 	Box2D bottomWall(0, nx-1, 0, 0);
 	Box2D topWall(0, nx-1, ny-1, ny-1);
 	
-	lattice.periodicity().toggle(0, false);
+	lattice.periodicity().toggle(0, true);
 
     boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice, topWall);
 	
@@ -166,15 +166,15 @@ int main(int argc, char* argv[]) {
                   << getStoredAverageDensity<T>(lattice) << endl;
         }
 
-        // if (iT%parameters.nStep(imSave)==0) {
-        //     pcout << "Saving Gif ..." << endl;
-        //     writeGifs(lattice, iT);
-        // }
+        if (iT%parameters.nStep(imSave)==0) {
+            pcout << "Saving Gif ..." << endl;
+            writeGifs(lattice, iT);
+        }
 
-        // if (iT%parameters.nStep(vtkSave)==0 && iT>0) {
-        //     pcout << "Saving VTK file ..." << endl;
-        //     writeVTK(lattice, parameters, iT);
-        // }
+        if (iT%parameters.nStep(vtkSave)==0 && iT>0) {
+            pcout << "Saving VTK file ..." << endl;
+            writeVTK(lattice, parameters, iT);
+        }
 
         // Lattice Boltzmann iteration step.
         lattice.collideAndStream();
