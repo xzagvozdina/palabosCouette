@@ -43,24 +43,6 @@ using namespace std;
 typedef double T;
 #define DESCRIPTOR D2Q9Descriptor
 
-
-// void defineCylinderGeometry( MultiBlockLattice2D<T,DESCRIPTOR>& lattice,
-//                              IncomprFlowParam<T> const& parameters )
-// {
-//     const plint nx = parameters.getNx();
-//     const plint ny = parameters.getNy();
-
-//     int cx     = nx / 4;
-//     int cy     = ny / 2; // + ny / 10;
-//     int radius = cy / 4;
-
-//     // createCylinder(lattice, cx, cy, radius);
-
-//     // createCylinder(lattice, 2*cx, cy, radius);
-    
-//     // createCylinder(lattice, 3*cx, cy, radius);
-// }
-
 void setupCouetteWallsWithPeriodicity( MultiBlockLattice2D<T,DESCRIPTOR>& lattice,
                   IncomprFlowParam<T> const& parameters,
                   OnLatticeBoundaryCondition2D<T,DESCRIPTOR>& boundaryCondition )
@@ -71,7 +53,7 @@ void setupCouetteWallsWithPeriodicity( MultiBlockLattice2D<T,DESCRIPTOR>& lattic
 	Box2D bottomWall(0, nx-1, 0, 0);
 	Box2D topWall(0, nx-1, ny-1, ny-1);
 	
-	lattice.periodicity().toggle(0, true);
+	lattice.periodicity().toggle(0, false);
 
     boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice, topWall);
 	
@@ -118,46 +100,6 @@ void setupCouetteWallsWithInOutlets( MultiBlockLattice2D<T,DESCRIPTOR>& lattice,
     lattice.initialize();
 }
 
-// void setupInletAndBulk( MultiBlockLattice2D<T,DESCRIPTOR>& lattice,
-//                         IncomprFlowParam<T> const& parameters,
-//                         OnLatticeBoundaryCondition2D<T,DESCRIPTOR>& boundaryCondition )
-// {
-//     const plint ny = parameters.getNy();
-
-//     // Create Velocity boundary conditions on inlet
-//     boundaryCondition.addVelocityBoundary0N(Box2D(0, 0, 0, ny - 1), lattice);
-
-//     setBoundaryVelocity (
-//             lattice, Box2D(0, 0, 0, ny - 1),
-//             CouetteVelocity<T>(parameters));
-//     initializeAtEquilibrium (
-//             lattice, lattice.getBoundingBox(),
-//             CouetteVelocityAndDensity<T,DESCRIPTOR>(parameters) );
-// }
-
-// void copyUnknownOnOutlet( MultiBlockLattice2D<T,DESCRIPTOR>& lattice,
-//                           IncomprFlowParam<T> const& parameters,
-//                           OnLatticeBoundaryCondition2D<T,DESCRIPTOR>& boundaryCondition )
-// {
-//     const plint nx = parameters.getNx();
-//     const plint ny = parameters.getNy();
-
-//     // On the right boundary, we copy the unknown populations from previous locations
-//     integrateProcessingFunctional(new CopyUnknownPopulationsFunctional2D<T,DESCRIPTOR, 0, +1>,
-//                                   Box2D(nx - 1, nx - 1, 0, ny - 1), lattice);
-// }
-
-// void velocityNeumannOutlet( MultiBlockLattice2D<T,DESCRIPTOR>& lattice,
-//                             IncomprFlowParam<T> const& parameters,
-//                             OnLatticeBoundaryCondition2D<T,DESCRIPTOR>& boundaryCondition )
-// {
-//     const plint nx = parameters.getNx();
-//     const plint ny = parameters.getNy();
-
-//     boundaryCondition.addVelocityBoundary0P (
-//             Box2D(nx - 1, nx - 1, 0, ny - 1), lattice, boundary::outflow );
-// }
-
 void writeGifs(MultiBlockLattice2D<T,DESCRIPTOR>& lattice, plint iter)
 {
     const plint imSize = 600;
@@ -185,8 +127,8 @@ int main(int argc, char* argv[]) {
 
     IncomprFlowParam<T> parameters(
             (T) 1e-2,  // uMax
-            (T) 1.5,  // Re 0.5 1.5     100
-            100,       // N             128  
+            (T) 15,  // Re 0.5 1.5     100
+            1000,       // N             128  
             2.,        // lx
             1.         // ly 
     );
@@ -205,14 +147,8 @@ int main(int argc, char* argv[]) {
         //boundaryCondition = createInterpBoundaryCondition2D<T,DESCRIPTOR>();
         boundaryCondition = createLocalBoundaryCondition2D<T,DESCRIPTOR>();
 
-    // setupCouetteWallsWithPeriodicity(lattice, parameters, *boundaryCondition);
-    setupCouetteWallsWithInOutlets(lattice, parameters, *boundaryCondition);
-    // lattice.periodicity().toggle(0, false);
-    // defineCylinderGeometry(lattice, parameters);
-    // setupInletAndBulk(lattice, parameters, *boundaryCondition);
-    // copyUnknownOnOutlet(lattice, parameters, *boundaryCondition);
-    // velocityNeumannOutlet(lattice, parameters, *boundaryCondition);
-    // lattice.initialize();
+    setupCouetteWallsWithPeriodicity(lattice, parameters, *boundaryCondition);
+    // setupCouetteWallsWithInOutlets(lattice, parameters, *boundaryCondition);
 
     // Main loop over time iterations.
     for (plint iT=0; iT*parameters.getDeltaT()<maxT; ++iT) {
@@ -230,15 +166,15 @@ int main(int argc, char* argv[]) {
                   << getStoredAverageDensity<T>(lattice) << endl;
         }
 
-        if (iT%parameters.nStep(imSave)==0) {
-            pcout << "Saving Gif ..." << endl;
-            writeGifs(lattice, iT);
-        }
+        // if (iT%parameters.nStep(imSave)==0) {
+        //     pcout << "Saving Gif ..." << endl;
+        //     writeGifs(lattice, iT);
+        // }
 
-        if (iT%parameters.nStep(vtkSave)==0 && iT>0) {
-            pcout << "Saving VTK file ..." << endl;
-            writeVTK(lattice, parameters, iT);
-        }
+        // if (iT%parameters.nStep(vtkSave)==0 && iT>0) {
+        //     pcout << "Saving VTK file ..." << endl;
+        //     writeVTK(lattice, parameters, iT);
+        // }
 
         // Lattice Boltzmann iteration step.
         lattice.collideAndStream();
