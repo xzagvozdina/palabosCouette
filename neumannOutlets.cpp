@@ -115,7 +115,8 @@ void writeVTK(MultiBlockLattice2D<T,DESCRIPTOR>& lattice,
 {
     T dx = parameters.getDeltaX();
     T dt = parameters.getDeltaT();
-    VtkImageOutput2D<T> vtkOut(createFileName("vtk", iter, 6), dx);
+    // VtkImageOutput2D<T> vtkOut(createFileName("vtk", iter, 6), dx);
+    VtkStructuredImageOutput2D<T> vtkOut(createFileName("vtk", iter, 6), dx);
     vtkOut.writeData<float>(*computeVelocityNorm(lattice), "velocityNorm", dx / dt);
     vtkOut.writeData<2,float>(*computeVelocity(lattice), "velocity", dx / dt);
 }
@@ -127,15 +128,15 @@ int main(int argc, char* argv[]) {
 
     IncomprFlowParam<T> parameters(
             (T) 1e-2,  // uMax
-            (T) 15,  // Re 0.5 1.5     100
-            1000,       // N             128  
+            (T) 1.5,  // Re 0.5 1.5     100
+            100,       // N             128  
             2.,        // lx
             1.         // ly 
     );
-    const T logT     = (T)0.02; //      0.1
-    const T imSave   = (T)0.1;  //      0.2
-    const T vtkSave  = (T)3.;   //      1.
-    const T maxT     = (T)10.1;
+    const T logT     = (T)0.1;  //0.02; //      0.1
+    const T imSave   = (T)1.;   //0.1;  //      0.2
+    const T vtkSave  = (T)10.;  //3.;   //      1.
+    const T maxT     = (T)101.; //100.1;
 
     writeLogFile(parameters, "Couette flow");
 
@@ -153,26 +154,30 @@ int main(int argc, char* argv[]) {
     // Main loop over time iterations.
     for (plint iT=0; iT*parameters.getDeltaT()<maxT; ++iT) {
         if ((iT+1)%parameters.nStep(logT)==0) {
-            pcout << computeAverageDensity(lattice) << endl;
-            pcout << computeAverageEnergy(lattice) << endl;
+            // pcout << computeAverageDensity(lattice) << endl;
+            // pcout << computeAverageEnergy(lattice) << endl;
+            pcout << (iT+1) << " " << iT*parameters.getDeltaT() 
+                    <<  " " << setprecision(10) << computeAverageDensity(lattice) 
+                    << " " << setprecision(10) << computeAverageEnergy(lattice) 
+                    << endl;
         }
-        if (iT%parameters.nStep(logT)==0) {
-            pcout << "step " << iT
-                  << "; lattice time=" << lattice.getTimeCounter().getTime()
-                  << "; t=" << iT*parameters.getDeltaT()
-                  << "; av energy="
-                  << setprecision(10) << getStoredAverageEnergy<T>(lattice)
-                  << "; av rho="
-                  << getStoredAverageDensity<T>(lattice) << endl;
-        }
+        // if (iT%parameters.nStep(logT)==0) {
+        //     pcout << "step " << iT
+        //           << "; lattice time=" << lattice.getTimeCounter().getTime()
+        //           << "; t=" << iT*parameters.getDeltaT()
+        //           << "; av energy="
+        //           << setprecision(10) << getStoredAverageEnergy<T>(lattice)
+        //           << "; av rho="
+        //           << getStoredAverageDensity<T>(lattice) << endl;
+        // }
 
         if (iT%parameters.nStep(imSave)==0) {
-            pcout << "Saving Gif ..." << endl;
+            // pcout << "Saving Gif ..." << endl;
             writeGifs(lattice, iT);
         }
 
         if (iT%parameters.nStep(vtkSave)==0 && iT>0) {
-            pcout << "Saving VTK file ..." << endl;
+            // pcout << "Saving VTK file ..." << endl;
             writeVTK(lattice, parameters, iT);
         }
 

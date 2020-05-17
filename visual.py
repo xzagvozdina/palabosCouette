@@ -67,7 +67,7 @@
 
 import vtk
 
-filename = "C:/Users/Ксения/palabos/examples/showCases/boundaryCondition/tmp/periodic/Re = 1.5/vtk030000.vti"
+filename = "C:/Users/Ксения/palabos/examples/showCases/boundaryCondition/tmp/vtk025600.vti"
 
 # imageData = vtk.vtkImageData()
 # imageData.SetDimensions(3, 4, 5)
@@ -96,17 +96,19 @@ filename = "C:/Users/Ксения/palabos/examples/showCases/boundaryCondition/t
 # writer.Write()
 
 # Read the file (to test that it was written correctly)
-reader = vtk.vtkXMLImageDataReader()
-reader.SetFileName(filename)
-reader.Update()
+# reader = vtk.vtkStructuredPointsReader()
+# reader = vtk.vtkStructuredPointsReader()
+# reader = vtk.vtkXMLImageDataReader()
+# reader.SetFileName(filename)
+# reader.Update()
 
-# Convert the image to a polydata
-imageDataGeometryFilter = vtk.vtkImageDataGeometryFilter()
-imageDataGeometryFilter.SetInputConnection(reader.GetOutputPort())
-imageDataGeometryFilter.Update()
+# # Convert the image to a polydata
+# imageDataGeometryFilter = vtk.vtkImageDataGeometryFilter()
+# imageDataGeometryFilter.SetInputConnection(reader.GetOutputPort())
+# imageDataGeometryFilter.Update()
 
-data = reader.GetOutput()
-print(data)
+# data = reader.GetOutput()
+# print(data)
 
 # mapper = vtk.vtkPolyDataMapper()
 # mapper.SetInputConnection(imageDataGeometryFilter.GetOutputPort())
@@ -129,3 +131,50 @@ print(data)
 # renderWindowInteractor.SetRenderWindow(renderWindow)
 # renderWindowInteractor.Initialize()
 # renderWindowInteractor.Start()
+
+
+
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
+
+reader = vtk.vtkXMLImageDataReader()
+reader.SetFileName(filename)
+reader.Update()
+
+data = reader.GetOutput()
+magn = data.GetPointData().GetArray(0)
+v = data.GetPointData().GetArray(1)
+n = data.GetNumberOfPoints()
+
+print(magn)
+print(v)
+print(n)
+
+# x = np.empty(n)
+# y = np.empty(n)
+# mag = np.empty(n)
+# vx = np.empty(n)
+# vy = np.empty(n)
+
+# for i in range(n):
+#     x[i] = data.GetPoint(i)[0]
+#     y[i] = data.GetPoint(i)[1]
+#     mag[i] = magn.GetValue(i)
+#     #print(v.GetValue(i))
+#     vx[i] = v.GetValue(2*i)
+#     vy[i] = v.GetValue(2*i +1)
+
+# plt.tricontourf(x, y, mag, 64)
+
+# norm = matplotlib.colors.Normalize()
+# norm.autoscale(mag)
+# sm = matplotlib.cm.ScalarMappable(norm=norm)
+# sm.set_array([])
+# fig, ax = plt.subplots(figsize=(20,16))
+# step = 3
+# ax.quiver(x[::step], y[::step], vx[::step], vy[::step], mag[::step],)
+# plt.colorbar(sm)
+    
