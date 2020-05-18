@@ -133,41 +133,43 @@ filename = "C:/Users/Ксения/palabos/examples/showCases/boundaryCondition/t
 # renderWindowInteractor.Start()
 
 
-
-
+import os
+os.chdir("C:/Users/Ксения/palabos/examples/showCases/boundaryCondition/tmp")
 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 
 reader = vtk.vtkXMLImageDataReader()
-reader.SetFileName(filename)
+reader.SetFileName('vtk030000.vti')
 reader.Update()
 
 data = reader.GetOutput()
-magn = data.GetPointData().GetArray(0)
+nv = data.GetPointData().GetArray(0)
 v = data.GetPointData().GetArray(1)
 n = data.GetNumberOfPoints()
 
-print(magn)
+print(nv)
 print(v)
 print(n)
 
-# x = np.empty(n)
-# y = np.empty(n)
-# mag = np.empty(n)
-# vx = np.empty(n)
-# vy = np.empty(n)
+x = np.empty(n)
+y = np.empty(n)
+norm = np.empty(n)
+vx = np.empty(n)
+vy = np.empty(n)
 
-# for i in range(n):
-#     x[i] = data.GetPoint(i)[0]
-#     y[i] = data.GetPoint(i)[1]
-#     mag[i] = magn.GetValue(i)
-#     #print(v.GetValue(i))
-#     vx[i] = v.GetValue(2*i)
-#     vy[i] = v.GetValue(2*i +1)
+for i in range(n):
+    x[i] = data.GetPoint(i)[0]
+    y[i] = data.GetPoint(i)[1]
+    norm[i] = nv.GetValue(i)
+    #print(v.GetValue(i))
+    vx[i] = v.GetValue(2*i)
+    vy[i] = v.GetValue(2*i + 1)
 
-# plt.tricontourf(x, y, mag, 64)
+print(norm)
+
+plt.tricontourf(x, y, norm, 64)
 
 # norm = matplotlib.colors.Normalize()
 # norm.autoscale(mag)
@@ -177,4 +179,3 @@ print(n)
 # step = 3
 # ax.quiver(x[::step], y[::step], vx[::step], vy[::step], mag[::step],)
 # plt.colorbar(sm)
-    

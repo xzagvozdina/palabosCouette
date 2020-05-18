@@ -56,14 +56,22 @@ void setupCouetteWallsWithPeriodicity( MultiBlockLattice2D<T,DESCRIPTOR>& lattic
 	lattice.periodicity().toggle(0, true);
 
     boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice, topWall);
+	boundaryCondition.setVelocityConditionOnBlockBoundaries (lattice, bottomWall); // , boundary::dirichlet );
 	
-	boundaryCondition.setVelocityConditionOnBlockBoundaries (lattice, bottomWall, boundary::freeslip );
-	
-    initializeAtEquilibrium(lattice, Box2D(0, nx-1, 1, ny-2), (T)1., Array<T,2>((T)0.,(T)0.) );
+    // boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice);
+
+    setBoundaryVelocity(lattice, bottomWall, Array<T,2>((T)0.,(T)0.) );
+    initializeAtEquilibrium(lattice, bottomWall, (T)1., Array<T,2>((T)0.,(T)0.) );
 
     T u = parameters.getLatticeU();
     setBoundaryVelocity(lattice, topWall, Array<T,2>(u,(T)0.) );
-    initializeAtEquilibrium(lattice, Box2D(0, nx-1, ny-1, ny-1), (T)1., Array<T,2>(u,(T)0.) );
+    initializeAtEquilibrium(lattice, topWall, (T)1., Array<T,2>(u,(T)0.) );
+
+    // initializeAtEquilibrium(lattice, Box2D(0, nx-1, 1, ny-2), (T)1., Array<T,2>((T)0.,(T)0.) );
+
+    // T u = parameters.getLatticeU();
+    // setBoundaryVelocity(lattice, topWall, Array<T,2>(u,(T)0.) );
+    // initializeAtEquilibrium(lattice, Box2D(0, nx-1, ny-1, ny-1), (T)1., Array<T,2>(u,(T)0.) );
 
     lattice.initialize();
 }
@@ -89,7 +97,7 @@ void setupCouetteWallsWithInOutlets( MultiBlockLattice2D<T,DESCRIPTOR>& lattice,
 
     boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice, topWall);
 	
-	boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice, bottomWall, boundary::freeslip);
+	boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice, bottomWall); //, boundary::freeslip);
 	
     initializeAtEquilibrium(lattice, Box2D(0, nx-1, 1, ny-2), (T)1., Array<T,2>((T)0.,(T)0.) );
 
@@ -115,8 +123,8 @@ void writeVTK(MultiBlockLattice2D<T,DESCRIPTOR>& lattice,
 {
     T dx = parameters.getDeltaX();
     T dt = parameters.getDeltaT();
-    // VtkImageOutput2D<T> vtkOut(createFileName("vtk", iter, 6), dx);
-    VtkStructuredImageOutput2D<T> vtkOut(createFileName("vtk", iter, 6), dx);
+    VtkImageOutput2D<T> vtkOut(createFileName("vtk", iter, 6), dx);
+    // VtkStructuredImageOutput2D<T> vtkOut(createFileName("vtk", iter, 6), dx);
     vtkOut.writeData<float>(*computeVelocityNorm(lattice), "velocityNorm", dx / dt);
     vtkOut.writeData<2,float>(*computeVelocity(lattice), "velocity", dx / dt);
 }
@@ -133,10 +141,10 @@ int main(int argc, char* argv[]) {
             2.,        // lx
             1.         // ly 
     );
-    const T logT     = (T)0.1;  //0.02; //      0.1
-    const T imSave   = (T)1.;   //0.1;  //      0.2
-    const T vtkSave  = (T)10.;  //3.;   //      1.
-    const T maxT     = (T)101.; //100.1;
+    const T logT     = (T)0.5; //0.02; //      0.1
+    const T imSave   = (T)10.; //0.1;  //      0.2
+    const T vtkSave  = (T)30.;   //      1.
+    const T maxT     = (T)100.1; //100.1;
 
     writeLogFile(parameters, "Couette flow");
 
@@ -152,15 +160,29 @@ int main(int argc, char* argv[]) {
     // setupCouetteWallsWithInOutlets(lattice, parameters, *boundaryCondition);
 
     // Main loop over time iterations.
+    T prev = computeAverageEnergy(lattice); //getStoredAverageVelocity(lattice);
+    T curr = 0.;
     for (plint iT=0; iT*parameters.getDeltaT()<maxT; ++iT) {
         if ((iT+1)%parameters.nStep(logT)==0) {
+            curr = computeAverageEnergy(lattice);
             // pcout << computeAverageDensity(lattice) << endl;
             // pcout << computeAverageEnergy(lattice) << endl;
             pcout << (iT+1) << " " << iT*parameters.getDeltaT() 
                     <<  " " << setprecision(10) << computeAverageDensity(lattice) 
-                    << " " << setprecision(10) << computeAverageEnergy(lattice) 
+                    << " " << setprecision(10) << curr
                     << endl;
+
+            if (fabs(prev - curr) < 1e-5)
+            {
+                writeVTK(lattice, parameters, iT);
+                break;
+            }
+            else
+            {
+                prev = curr;
+            }
         }
+
         // if (iT%parameters.nStep(logT)==0) {
         //     pcout << "step " << iT
         //           << "; lattice time=" << lattice.getTimeCounter().getTime()
@@ -171,15 +193,15 @@ int main(int argc, char* argv[]) {
         //           << getStoredAverageDensity<T>(lattice) << endl;
         // }
 
-        if (iT%parameters.nStep(imSave)==0) {
-            // pcout << "Saving Gif ..." << endl;
-            writeGifs(lattice, iT);
-        }
+        // if (iT%parameters.nStep(imSave)==0) {
+        //     pcout << "Saving Gif ..." << endl;
+        //     writeGifs(lattice, iT);
+        // }
 
-        if (iT%parameters.nStep(vtkSave)==0 && iT>0) {
-            // pcout << "Saving VTK file ..." << endl;
-            writeVTK(lattice, parameters, iT);
-        }
+        // if (iT%parameters.nStep(vtkSave)==0 && iT>0) {
+        //     pcout << "Saving VTK file ..." << endl;
+        //     writeVTK(lattice, parameters, iT);
+        // }
 
         // Lattice Boltzmann iteration step.
         lattice.collideAndStream();
