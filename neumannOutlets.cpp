@@ -56,7 +56,7 @@ void setupCouetteWallsWithPeriodicity( MultiBlockLattice2D<T,DESCRIPTOR>& lattic
 	lattice.periodicity().toggle(0, true);
 
     boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice, topWall);
-	boundaryCondition.setVelocityConditionOnBlockBoundaries (lattice, bottomWall); // , boundary::dirichlet );
+	boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice, bottomWall); // , boundary::dirichlet );
 	
     // boundaryCondition.setVelocityConditionOnBlockBoundaries(lattice);
 
@@ -141,10 +141,10 @@ int main(int argc, char* argv[]) {
             2.,        // lx
             1.         // ly 
     );
-    const T logT     = (T)0.5; //0.02; //      0.1
-    const T imSave   = (T)10.; //0.1;  //      0.2
-    const T vtkSave  = (T)30.;   //      1.
-    const T maxT     = (T)100.1; //100.1;
+    const T logT     = (T)0.02;  //0.5; //0.02; //      0.1
+    const T imSave   = (T)0.1;  //10.; //0.1;  //      0.2
+    const T vtkSave  = (T)1.;  //30.;   //      1.
+    const T maxT     = (T)10.1; //100.1;
 
     writeLogFile(parameters, "Couette flow");
 
@@ -165,43 +165,43 @@ int main(int argc, char* argv[]) {
     for (plint iT=0; iT*parameters.getDeltaT()<maxT; ++iT) {
         if ((iT+1)%parameters.nStep(logT)==0) {
             curr = computeAverageEnergy(lattice);
-            // pcout << computeAverageDensity(lattice) << endl;
-            // pcout << computeAverageEnergy(lattice) << endl;
-            pcout << (iT+1) << " " << iT*parameters.getDeltaT() 
-                    <<  " " << setprecision(10) << computeAverageDensity(lattice) 
-                    << " " << setprecision(10) << curr
-                    << endl;
+            pcout << computeAverageDensity(lattice) << endl;
+            pcout << computeAverageEnergy(lattice) << endl;
+            // pcout << (iT+1) << " " << iT*parameters.getDeltaT() 
+            //         <<  " " << setprecision(10) << computeAverageDensity(lattice) 
+            //         << " " << setprecision(10) << curr
+            //         << endl;
 
-            if (fabs(prev - curr) < 1e-5)
-            {
-                writeVTK(lattice, parameters, iT);
-                break;
-            }
-            else
-            {
-                prev = curr;
-            }
+            // if (fabs(prev - curr) < 1e-5)
+            // {
+            //     writeVTK(lattice, parameters, iT);
+            //     break;
+            // }
+            // else
+            // {
+            //     prev = curr;
+            // }
         }
 
-        // if (iT%parameters.nStep(logT)==0) {
-        //     pcout << "step " << iT
-        //           << "; lattice time=" << lattice.getTimeCounter().getTime()
-        //           << "; t=" << iT*parameters.getDeltaT()
-        //           << "; av energy="
-        //           << setprecision(10) << getStoredAverageEnergy<T>(lattice)
-        //           << "; av rho="
-        //           << getStoredAverageDensity<T>(lattice) << endl;
-        // }
+        if (iT%parameters.nStep(logT)==0) {
+            pcout << "step " << iT
+                  << "; lattice time=" << lattice.getTimeCounter().getTime()
+                  << "; t=" << iT*parameters.getDeltaT()
+                  << "; av energy="
+                  << setprecision(10) << getStoredAverageEnergy<T>(lattice)
+                  << "; av rho="
+                  << getStoredAverageDensity<T>(lattice) << endl;
+        }
 
-        // if (iT%parameters.nStep(imSave)==0) {
-        //     pcout << "Saving Gif ..." << endl;
-        //     writeGifs(lattice, iT);
-        // }
+        if (iT%parameters.nStep(imSave)==0) {
+            pcout << "Saving Gif ..." << endl;
+            writeGifs(lattice, iT);
+        }
 
-        // if (iT%parameters.nStep(vtkSave)==0 && iT>0) {
-        //     pcout << "Saving VTK file ..." << endl;
-        //     writeVTK(lattice, parameters, iT);
-        // }
+        if (iT%parameters.nStep(vtkSave)==0 && iT>0) {
+            pcout << "Saving VTK file ..." << endl;
+            writeVTK(lattice, parameters, iT);
+        }
 
         // Lattice Boltzmann iteration step.
         lattice.collideAndStream();
